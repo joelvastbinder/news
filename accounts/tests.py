@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 
 
 class UsersManagersTests(TestCase):
@@ -10,9 +11,13 @@ class UsersManagersTests(TestCase):
             email="testuser@example.com",
             password="testpass1234"
         )
+        first_pass = User.objects.last().password.split('$')
+        hasher = first_pass[0]
+        salt = first_pass[1]
+
         self.assertEqual(user.username, "testuser")
         self.assertEqual(user.email, "testuser@example.com")
-        self.assertEqual(user.password, "testpass1234")
+        self.assertTrue(user.check_password('testpass1234'))
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
@@ -24,9 +29,13 @@ class UsersManagersTests(TestCase):
             email="testsuperuser@example.com",
             password="testsuperpass1234"
         )
+        first_pass = User.objects.last().password.split('$')
+        hasher = first_pass[0]
+        salt = first_pass[1]
+
         self.assertEqual(admin_user.username, "testsuperuser")
         self.assertEqual(admin_user.email, "testsuperuser@example.com")
-        self.assertEqual(admin_user.password, "testsuperpass1234")
+        self.assertTrue(admin_user.check_password('testsuperpass1234'))
         self.assertTrue(admin_user.is_active)
         self.assertTrue(admin_user.is_staff)
         self.assertTrue(admin_user.is_superuser)
