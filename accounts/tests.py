@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
+from django.urls import reverse
 
 
 class UsersManagersTests(TestCase):
@@ -11,10 +11,6 @@ class UsersManagersTests(TestCase):
             email="testuser@example.com",
             password="testpass1234"
         )
-        first_pass = User.objects.last().password.split('$')
-        hasher = first_pass[0]
-        salt = first_pass[1]
-
         self.assertEqual(user.username, "testuser")
         self.assertEqual(user.email, "testuser@example.com")
         self.assertTrue(user.check_password('testpass1234'))
@@ -29,10 +25,6 @@ class UsersManagersTests(TestCase):
             email="testsuperuser@example.com",
             password="testsuperpass1234"
         )
-        first_pass = User.objects.last().password.split('$')
-        hasher = first_pass[0]
-        salt = first_pass[1]
-
         self.assertEqual(admin_user.username, "testsuperuser")
         self.assertEqual(admin_user.email, "testsuperuser@example.com")
         self.assertTrue(admin_user.check_password('testsuperpass1234'))
@@ -40,4 +32,29 @@ class UsersManagersTests(TestCase):
         self.assertTrue(admin_user.is_staff)
         self.assertTrue(admin_user.is_superuser)
 
+class SignupPageTests(TestCase):
+    def test_url_exists_at_correct_location(self):
+        response = self.client.get("/accounts/signup/")
+        self.assertEqual(response.status_code, 200)
 
+    def test_signup_view_name(self):
+        response = self.client.get("/accounts/signup/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_signup_form(self):
+        response = self.client.post(
+            reverse("signup"),
+            {
+                "username": "testuser",
+                "email": "testuser@example.com",
+                "password1": "testpass123",
+                "password2": "testpass123",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(get_user_model().objects.all().count(), 1)
+        self.assertEqual(get_user_model().objects.all()[0].username, "testuser")
+        self.assertEqual(
+            get_user_model().objects.all()[0].email,
+            "testuser@example.com"
+        )
